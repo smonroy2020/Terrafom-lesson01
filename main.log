@@ -1,0 +1,72 @@
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 3.27"
+    }
+  }
+
+  required_version = ">= 0.14.9"
+}
+
+provider "aws" {
+  profile = "default"
+  region  = "us-east-1"
+}
+
+resource "aws_vpc" "vpc_sm_main" {
+  cidr_block       = "172.16.0.0/16"
+  instance_tenancy = "default"
+
+  tags = {
+    Name = "terraform_SM_main"
+  }
+}
+
+
+resource "aws_subnet" "subnet_sm_main" {
+  vpc_id            = aws_vpc.vpc_sm_main.id
+  cidr_block        = "172.16.10.0/24"
+  /*availability_zone = "us-east-1"*/
+
+  tags = {
+    Name = "terraform_SM_Subnet"
+  }
+}
+
+
+resource "aws_security_group" "sg_sm_allow_all" {
+  name        = "allow_tls"
+  description = "Allow TLS inbound traffic"
+  vpc_id      = aws_vpc.vpc_sm_main.id
+
+  ingress {
+    description      = "All port from VPC"
+    from_port        = 80
+    to_port          = 80
+    protocol         = "tcp"
+    cidr_blocks      = [aws_vpc.vpc_sm_main.cidr_git ock]
+    /*ipv6_cidr_blocks = [aws_vpc.vpc_sm_main.ipv6_cidr_block]*/
+  }
+
+  
+  tags = {
+    Name = "terraform_sm_securitygroup"
+  }
+}
+
+
+
+resource "aws_instance" "app_server" {
+  ami           = "ami-0aeeebd8d2ab47354"
+  instance_type = "t2.micro"
+  subnet_id = aws_subnet.subnet_sm_main.id
+  security_groups = ["${aws_security_group.sg_sm_allow_all.id}"]
+
+  tags = {
+    Name = "SM_5_Instance"
+  }
+  
+}
+
+
