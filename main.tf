@@ -22,3 +22,5 @@ resource "aws_instance" "app_server" {
     Name = "WebPage_Instance"
   }
 }
+
+##This is a test for file change to GIT - lesson1
